@@ -21,7 +21,7 @@ jobs:
 
       - name: Determine branch name
         run: |
-          BRANCH="master"
+          BRANCH="${GITHUB_BASE_REF#refs/heads/}"
           echo "Building for $BRANCH"
           echo "BRANCH=$BRANCH" >> $GITHUB_ENV
 
@@ -49,10 +49,11 @@ jobs:
           echo "PACKAGES=$PACKAGES" >> $GITHUB_ENV
 
       - name: Build
-        uses: immortalwrt/gh-action-sdk@v4.1
+        uses: immortalwrt/gh-action-sdk@v5
         env:
-          ARCH: ${{ matrix.arch }}-${{ env.BRANCH }}
+          ARCH: ${{ matrix.arch }}
           FEEDNAME: packages_ci
+          V: s
 
       - name: Move created packages to project dir
         run: cp bin/packages/${{ matrix.arch }}/packages_ci/*.ipk . || true
@@ -78,8 +79,10 @@ jobs:
           Download-URL: $GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID
           Summary: $PACKAGES
           Platform: ${{ matrix.arch }}
+
           Packages for ImmortalWrt $BRANCH running on ${{matrix.arch}}, built from PR $PRNUMBER
           at commit $HEAD_ID, against $BRANCH at commit $BASE_ID, with merge SHA $MERGE_ID.
+
           Modified packages:
           _EOF_
           for p in $PACKAGES
@@ -96,5 +99,7 @@ jobs:
         with:
           name: ${{env.ARCHIVE_NAME}}-packages
           path: |
+            Packages
+            Packages.*
             *.ipk
             PKG-INFO
